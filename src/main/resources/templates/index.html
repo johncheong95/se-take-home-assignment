@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="ISO-8859-1">
+<title>Mcd Order Application</title>
+<link
+	href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+	rel="stylesheet"
+	integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+	crossorigin="anonymous">
+<script
+	src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+	integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+	crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<link th:href="@{/css/stylesheet.css}" rel="stylesheet" />
+</head>
+<body>
+
+	<div class="container">
+		<div class="row">
+			<div class="col">
+				<div class="card">
+					<div class="card-header">Bots Area</div>
+					<div class="card-body" id="bot-area-body"></div>
+
+				</div>
+			</div>
+			<div class="col">
+				<div class="card">
+					<div class="card-header">Pending Orders</div>
+					<div class="card-body" id="pending-order-body"></div>
+				</div>
+			</div>
+			<div class="col">
+				<div class="card">
+					<div class="card-header">Processing Orders</div>
+					<div class="card-body" id="processing-order-body"></div>
+				</div>
+			</div>
+			<div class="col">
+				<div class="card">
+					<div class="card-header">Complete Orders</div>
+					<div class="card-body" id="complete-order-body"></div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="container">
+		<button type="button" class="btn btn-primary" id="normal-order-button">Add
+			Order</button>
+		<button type="button" class="btn btn-primary" id="vip-order-button">Add
+			VIP Order</button>
+		<button type="button" class="btn btn-success" id="add-bot-button">+
+			Bots</button>
+		<button type="button" class="btn btn-danger" id="remove-bot-button">-
+			Bots</button>
+	</div>
+
+
+	<script>
+		$(document).ready(
+				function() {
+					$('#remove-bot-button').click(function() {
+
+						$.ajax({
+							type : "DELETE",
+							url : "/api/v1/bots",
+							dataType : "json",
+						}).done(function(result) {
+							console.log(result)
+							removeRow(result.botsId);
+						})
+
+					})
+					$('#add-bot-button').click(function() {
+
+						$.ajax({
+							type : "POST",
+							url : "/api/v1/bots",
+							dataType : "json",
+						}).done(function(result) {
+							console.log(result)
+							appendRow("#bot-area-body", result.botsId);
+						})
+
+					})
+
+					$('#normal-order-button').click(function() {
+
+						$.ajax({
+							type : "POST",
+							url : "/api/v1/orders",
+							dataType : "json",
+						}).done(function(result) {
+							console.log(result)
+							appendRow("#pending-order-body", result.orderId);
+						})
+
+					})
+
+					$('#vip-order-button').click(function() {
+
+						$.ajax({
+							type : "POST",
+							url : "/api/v1/orders/vip",
+							dataType : "json",
+						}).done(function(result) {
+							console.log(result)
+							appendRow("#pending-order-body", result.orderId);
+						})
+
+					})
+					setInterval(updatePendingOrderList, 1500);
+					setInterval(updateProcessingOrderList, 1500);
+					setInterval(updateCompletedOrderList, 1500);
+					
+					function updatePendingOrderList() {
+						$.ajax({
+							type : "GET",
+							url : "/api/v1/orders",
+							dataType : "json",
+						}).done(function(result) {
+							console.log(result)
+							appendContainer("#pending-order-body", result);
+						})
+
+					}
+
+					function updateProcessingOrderList() {
+
+						$.ajax({
+							type : "GET",
+							url : "/api/v1/orders?orderStatus=PROCESSING",
+							dataType : "json",
+						}).done(function(result) {
+							appendContainer("#processing-order-body", result);
+						})
+
+					}
+
+					function updateCompletedOrderList() {
+
+						$.ajax({
+							type : "GET",
+							url : "/api/v1/orders?orderStatus=COMPLETED",
+							dataType : "json",
+						}).done(function(result) {
+							appendContainer("#complete-order-body", result);
+						})
+
+					}
+
+					function appendRow(container, data) {
+						$(container).append(
+								"<div class=\"row\" id=\""+data+"\">" + data
+										+ "</div>")
+					}
+
+					function removeRow(id) {
+						$("#" + id).remove();
+					}
+
+					function appendContainer(container, data) {
+						$(container).empty();
+						data.forEach(function(row) {
+							$(container).append(
+									"<div class=\"row\" id=\""+row.orderId+"\">"
+											+ row.orderId + "</div>")
+						})
+
+					}
+				})
+	</script>
+</body>
+</html>
